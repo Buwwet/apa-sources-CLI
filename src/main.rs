@@ -21,8 +21,8 @@ fn main() {
 
     // Write top header.
     write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
-        termion::clear::All,
         termion::cursor::Goto(1,1),
+        termion::clear::AfterCursor,
         termion::color::Bg(termion::color::Rgb(120,120,120)),
         termion::color::Fg(termion::color::White),
         termion::style::Italic,
@@ -45,6 +45,10 @@ fn main() {
             Key::Ctrl('c') => {
                 // Leave raw mode and quit
                 stdout.suspend_raw_mode().unwrap();
+                // Show cursor and print the finished apa format.
+                writeln!(stdout, "{}", termion::cursor::Show).unwrap();
+                stdout.flush().unwrap();
+
                 std::process::exit(0);
             }
             // Switch editing mode
