@@ -1,6 +1,8 @@
 use std::{collections::HashMap, slice::Iter};
 use std::fmt;
 
+use termion::style;
+
 #[derive(Clone, Copy)]
 pub enum ApaFormatType {
     None,
@@ -10,12 +12,19 @@ impl ApaFormatType {
     pub fn list() -> [ApaFormatType; 2] {
         [ApaFormatType::Website, ApaFormatType::None]
     }
+    pub fn link(&self) -> &'static str {
+        // Provide the link with more information.
+        match self {
+            Self::Website => "https://www.scribbr.com/apa-examples/website/",
+            Self::None => "",
+        }
+    }
 }
 
 impl fmt::Display for ApaFormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Website => write!(f, "website"),
+            Self::Website => write!(f, "webpage"),
             Self::None => write!(f, "none"),
         }
     }
@@ -33,11 +42,11 @@ impl ApaFormat {
         match format {
             ApaFormatType::Website => {
                 //TODO: remove answered fields
-                    data.insert(0, ("authors".to_string(), "Barack Obama".to_string()));
+                    data.insert(0, ("authors".to_string(), "".to_string()));
                     data.insert(1, ("date".to_string(), "".to_string()));
-                    data.insert(2, ("title".to_string(), "How to code".to_string()));
-                    data.insert(3, ("publisher".to_string(), "".to_string()));
-                    data.insert(4, ("URL".to_string(), "wikipedia.com".to_string())); 
+                    data.insert(2, ("title".to_string(), "".to_string()));
+                    data.insert(3, ("website".to_string(), "".to_string()));
+                    data.insert(4, ("URL".to_string(), "".to_string())); 
                 }
             ApaFormatType::None => {}
         };
@@ -64,11 +73,15 @@ impl fmt::Display for ApaFormat {
                 let publisher = self.data.get(&3).unwrap();
                 let URL = self.data.get(&4).unwrap();
 
-                write!(f, "{}. ({}). {}. {}. {}",
+                write!(f, "{}. ({}). {}{}{}. {}. {}",
                     authors.1,
                     // If date is not found, add n.d
                     if &date.1 != "" {&date.1} else {"n.d."},
+
+                    style::Italic,
                     title.1,
+                    style::NoItalic,
+
                     publisher.1,
                     URL.1,
                 )

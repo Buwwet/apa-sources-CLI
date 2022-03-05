@@ -19,14 +19,11 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     // Write the top header.
-    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
+    write!(stdout, "{}{}{}{}-- APA CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
         termion::cursor::Goto(1,1),
         termion::clear::AfterCursor,
         termion::color::Bg(termion::color::Rgb(120,120,120)),
         termion::color::Fg(termion::color::White),
-        termion::style::Italic,
-        logic.apa.format,
-        termion::style::NoItalic,
 
         termion::cursor::Goto(1,2),
 
@@ -58,45 +55,6 @@ fn main() {
                 std::process::exit(0);
             }
             _ => {}
-        }
-        /* APA selecting mode */
-        if logic.selecting_format 
-        {
-            let format_num: usize = ApaFormatType::list().len();
-
-            match key.as_ref().unwrap() {
-                /* Selection Keys */
-                Key::Left if logic.selected != 0 => {
-                    logic.selected -= 1;
-                }
-                Key::Right if logic.selected < format_num - 1 => {
-                    logic.selected += 1;
-                }
-                // Select the format and switch to editing mode
-                Key::Char('\n') => {
-                    logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
-                    logic.selected = 0;
-                    logic.selecting_format = false;
-                    // Write top header.
-                    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
-                        termion::cursor::Goto(1,1),
-                        termion::clear::AfterCursor,
-                        termion::color::Bg(termion::color::Rgb(120,120,120)),
-                        termion::color::Fg(termion::color::White),
-                        termion::style::Italic,
-                        logic.apa.format,
-                        termion::style::NoItalic,
-
-                        termion::cursor::Goto(1,2),
-
-                        termion::color::Bg(termion::color::Reset),
-                        termion::color::Fg(termion::color::Reset),
-                    ).unwrap(); 
-
-                    // Clear out the junk
-                }
-                _ => {}
-            }
         }
 
         /* APA editing mode */
@@ -179,6 +137,46 @@ fn main() {
             
             _ => {}
         };
+        }
+
+        /* APA selecting mode */
+        if logic.selecting_format 
+        {
+            let format_num: usize = ApaFormatType::list().len();
+
+            match key.as_ref().unwrap() {
+                /* Selection Keys */
+                Key::Left if logic.selected != 0 => {
+                    logic.selected -= 1;
+                }
+                Key::Right if logic.selected < format_num - 1 => {
+                    logic.selected += 1;
+                }
+                // Select the format and switch to editing mode
+                Key::Char('\n') => {
+                    logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
+                    logic.selected = 0;
+                    logic.selecting_format = false;
+                    // Write top header.
+                    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
+                        termion::cursor::Goto(1,1),
+                        termion::clear::AfterCursor,
+                        termion::color::Bg(termion::color::Rgb(120,120,120)),
+                        termion::color::Fg(termion::color::White),
+                        termion::style::Italic,
+                        logic.apa.format,
+                        termion::style::NoItalic,
+
+                        termion::cursor::Goto(1,2),
+
+                        termion::color::Bg(termion::color::Reset),
+                        termion::color::Fg(termion::color::Reset),
+                    ).unwrap(); 
+
+                    // Clear out the junk
+                }
+                _ => {}
+            }
         }
         
         render(&logic, &mut stdout);

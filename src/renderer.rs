@@ -57,12 +57,24 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
             ).unwrap();
         }
 
+        // Print link with more info on this type of apa format.
+        write!(stdout, "{}More Info: {}{}{}{}{}{}",
+            Goto(1, logic.apa.data.len() as u16 + 3),
+            
+            color::Fg(color::LightBlue),
+            style::Underline,
+            style::Italic,
+            logic.apa.format.link(),
+            color::Fg(color::Reset),
+            style::Reset,
+        ).unwrap();
+
         // Draw the "FINISHED" APA citation.
         write!(stdout, "{}{}APA reference:{}    {}",
-            Goto(1, logic.apa.data.len() as u16 + 3),
+            Goto(1, logic.apa.data.len() as u16 + 4),
             termion::clear::AfterCursor,
 
-            Goto(1, logic.apa.data.len() as u16 + 4),
+            Goto(1, logic.apa.data.len() as u16 + 5),
             logic.apa
         ).unwrap();
         
