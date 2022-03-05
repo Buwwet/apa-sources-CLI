@@ -46,6 +46,11 @@ fn main() {
             Key::Ctrl('c') => {
                 // Leave raw mode and quit
                 stdout.suspend_raw_mode().unwrap();
+
+                // Quick fix to exit the program with the cursor at the bottom.
+                logic.edit_state = false;
+                render(&logic, &mut stdout);
+
                 // Show cursor and print the finished apa format.
                 writeln!(stdout, "{}", termion::cursor::Show).unwrap();
                 stdout.flush().unwrap();
