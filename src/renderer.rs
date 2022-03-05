@@ -72,7 +72,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
         // Draw the "FINISHED" APA citation.
         write!(stdout, "{}{}APA reference:{}    {}",
             Goto(1, logic.apa.data.len() as u16 + 4),
-            termion::clear::AfterCursor,
+            termion::clear::UntilNewline,
 
             Goto(1, logic.apa.data.len() as u16 + 5),
             logic.apa

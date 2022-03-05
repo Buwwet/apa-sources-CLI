@@ -19,16 +19,17 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     // Write the top header.
-    write!(stdout, "{}{}{}{}-- APA CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
+    write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
         termion::cursor::Goto(1,1),
         termion::clear::AfterCursor,
-        termion::color::Bg(termion::color::Rgb(120,120,120)),
-        termion::color::Fg(termion::color::White),
+        termion::color::Fg(termion::color::AnsiValue(7)),
+        termion::style::Bold,
+        termion::style::Invert,
 
         termion::cursor::Goto(1,2),
 
         termion::color::Bg(termion::color::Reset),
-        termion::color::Fg(termion::color::Reset),
+        termion::style::Reset,
     ).unwrap(); 
 
     stdout.flush().unwrap();
@@ -158,11 +159,13 @@ fn main() {
                     logic.selected = 0;
                     logic.selecting_format = false;
                     // Write top header.
-                    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
+                    write!(stdout, "{}{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
                         termion::cursor::Goto(1,1),
                         termion::clear::AfterCursor,
-                        termion::color::Bg(termion::color::Rgb(120,120,120)),
-                        termion::color::Fg(termion::color::White),
+                        termion::color::Fg(termion::color::AnsiValue(7)),
+                        termion::style::Bold,
+                        termion::style::Invert,
+
                         termion::style::Italic,
                         logic.apa.format,
                         termion::style::NoItalic,
@@ -171,6 +174,7 @@ fn main() {
 
                         termion::color::Bg(termion::color::Reset),
                         termion::color::Fg(termion::color::Reset),
+                        termion::style::Reset,
                     ).unwrap(); 
 
                     // Clear out the junk
