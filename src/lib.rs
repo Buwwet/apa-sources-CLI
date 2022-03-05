@@ -1,13 +1,22 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, slice::Iter};
 use std::fmt;
+
+#[derive(Clone, Copy)]
 pub enum ApaFormatType {
+    None,
     Website
+}
+impl ApaFormatType {
+    pub fn list() -> [ApaFormatType; 2] {
+        [ApaFormatType::Website, ApaFormatType::None]
+    }
 }
 
 impl fmt::Display for ApaFormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Website => write!(f, "website")
+            Self::Website => write!(f, "website"),
+            Self::None => write!(f, "none"),
         }
     }
 }
@@ -30,6 +39,7 @@ impl ApaFormat {
                     data.insert(3, ("publisher".to_string(), "".to_string()));
                     data.insert(4, ("URL".to_string(), "wikipedia.com".to_string())); 
                 }
+            ApaFormatType::None => {}
         };
 
         ApaFormat {
@@ -43,6 +53,9 @@ impl fmt::Display for ApaFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         
         match self.format {
+            ApaFormatType::None => {
+                write!(f, "none")
+            }
             ApaFormatType::Website => {
                 // Get all of the fields.
                 let authors = self.data.get(&0).unwrap();
@@ -67,20 +80,26 @@ impl fmt::Display for ApaFormat {
 
 // Base logic of the program
 pub struct Logic {
+    /* APA format selector */
+    pub selecting_format: bool,
+
+    /* APA editor */
     pub edit_state: bool,
     pub selected: usize,
     pub cursor_pos: usize,
+
     pub apa: ApaFormat,
 }
 
 impl Logic {
     pub fn new() -> Logic {
         Logic {
+            selecting_format: true,
             edit_state: false,
             selected: 0,
             cursor_pos: 0,
             // TODO: create a menu to choose.
-            apa: ApaFormat::new(ApaFormatType::Website),
+            apa: ApaFormat::new(ApaFormatType::None),
         }
     }
 }

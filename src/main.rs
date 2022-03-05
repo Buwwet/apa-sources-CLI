@@ -2,7 +2,7 @@ mod lib;
 mod renderer;
 
 
-use apa::Logic;
+use apa::{Logic, ApaFormatType, ApaFormat};
 use renderer::render;
 
 use std::{time, thread, io::stdout, fmt::write, io::Write};
@@ -13,13 +13,12 @@ fn main() {
     // Define container that houses all of the variables
     let mut logic = Logic::new();
 
-    // Logic Loop
 
     // Terminal
     let stdin = std::io::stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    // Write top header.
+    // Write the top header.
     write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
         termion::cursor::Goto(1,1),
         termion::clear::AfterCursor,
@@ -37,9 +36,11 @@ fn main() {
 
     stdout.flush().unwrap();
     
+    // Render once to have a bit of content to show.
+    render(&logic, &mut stdout);
     // This loops forever.
     for key in stdin.keys() {
-        match key.unwrap() {
+        match key.as_ref().unwrap() {
             /* Universal Keys */
             // Quit key
             Key::Ctrl('c') => {
@@ -51,6 +52,51 @@ fn main() {
 
                 std::process::exit(0);
             }
+            _ => {}
+        }
+        /* APA selecting mode */
+        if logic.selecting_format 
+        {
+            let format_num: usize = ApaFormatType::list().len();
+
+            match key.as_ref().unwrap() {
+                /* Selection Keys */
+                Key::Left if logic.selected != 0 => {
+                    logic.selected -= 1;
+                }
+                Key::Right if logic.selected < format_num - 1 => {
+                    logic.selected += 1;
+                }
+                // Select the format and switch to editing mode
+                Key::Char('\n') => {
+                    logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
+                    logic.selected = 0;
+                    logic.selecting_format = false;
+                    // Write top header.
+                    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
+                        termion::cursor::Goto(1,1),
+                        termion::clear::AfterCursor,
+                        termion::color::Bg(termion::color::Rgb(120,120,120)),
+                        termion::color::Fg(termion::color::White),
+                        termion::style::Italic,
+                        logic.apa.format,
+                        termion::style::NoItalic,
+
+                        termion::cursor::Goto(1,2),
+
+                        termion::color::Bg(termion::color::Reset),
+                        termion::color::Fg(termion::color::Reset),
+                    ).unwrap(); 
+
+                    // Clear out the junk
+                }
+                _ => {}
+            }
+        }
+
+        /* APA editing mode */
+        if !logic.selecting_format {
+        match key.as_ref().unwrap() {
             // Switch editing mode
             Key::Char('\n') => {
                 logic.edit_state = !logic.edit_state;
@@ -120,15 +166,15 @@ fn main() {
             Key::Char(c) if logic.edit_state => {
                 // Append the character to the end of the field
                 let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
-                apa_field.1.insert(logic.cursor_pos, c);
+                apa_field.1.insert(logic.cursor_pos, *c);
 
                 // Update the character position.
                 logic.cursor_pos += 1;
             }
             
-
             _ => {}
         };
+        }
         
         render(&logic, &mut stdout);
     };
