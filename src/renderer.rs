@@ -6,8 +6,6 @@ use termion::cursor::Goto;
 
 pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
-    write!(stdout, "{}{}", termion::cursor::Goto(1,2), logic.edit_state).unwrap();
-
     // Add each field in the apa data, calculate which is the longest one
     let mut longest_field: usize = 0;
     for (i, apa_data) in logic.apa.data.iter() {
@@ -42,8 +40,11 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
     }
 
     // Draw the "FINISHED" APA citation.
-    write!(stdout, "{} APA reference:\n{}",
+    write!(stdout, "{}{}APA reference:{}    {}",
         Goto(1, logic.apa.data.len() as u16 + 3),
+        termion::clear::AfterCursor,
+
+        Goto(1, logic.apa.data.len() as u16 + 4),
         logic.apa
     ).unwrap();
     

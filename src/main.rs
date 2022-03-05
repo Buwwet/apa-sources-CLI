@@ -20,7 +20,7 @@ fn main() {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     // Write top header.
-    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} -- {}{}",
+    write!(stdout, "{}{}{}{}-- Current APA format type: {}{}{} --{} (d) full delete | (Return) edit{}{}",
         termion::clear::All,
         termion::cursor::Goto(1,1),
         termion::color::Bg(termion::color::Rgb(120,120,120)),
@@ -28,6 +28,8 @@ fn main() {
         termion::style::Italic,
         logic.apa.format,
         termion::style::NoItalic,
+
+        termion::cursor::Goto(1,2),
 
         termion::color::Bg(termion::color::Reset),
         termion::color::Fg(termion::color::Reset),
@@ -61,6 +63,11 @@ fn main() {
             Key::Up if !logic.edit_state && logic.selected != 0 => {
                 // Prevent underflow ^
                 logic.selected -= 1;
+            }
+            Key::Char('d') if !logic.edit_state => {
+                // Completely wipe the selected field.
+                let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
+                apa_field.1 = "".to_string();
             }
 
             /* Editing State */
