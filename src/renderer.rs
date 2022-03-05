@@ -1,13 +1,13 @@
-use std::io::{stdout, Write};
+use std::{io::{stdout, Write, Stdout}, str::Bytes};
 
 use apa::Logic;
-use termion::{self, raw::IntoRawMode};
+use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead};
 
-pub fn render(logic: &Logic) {
-    let mut stdout = stdout().into_raw_mode().unwrap();
+pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
+    write!(stdout, "{}", termion::clear::All).unwrap();
+    write!(stdout, "{}{}", termion::cursor::Goto(1,1), 2).unwrap();
 
-    print!("{}pos: {}. edit: {}", termion::cursor::Goto(1,1), logic.selected, logic.edit_state);
     
     // Update the terminal.
     stdout.flush().unwrap();

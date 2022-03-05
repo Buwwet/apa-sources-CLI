@@ -5,8 +5,9 @@ mod renderer;
 use apa::Logic;
 use renderer::render;
 
-use std::{time, thread};
-use termion::{input::TermRead, event::Key};
+use std::{time, thread, io::stdout, fmt::write, io::Write};
+use termion::{input::TermRead, event::Key, raw::IntoRawMode};
+
 
 
 
@@ -14,31 +15,33 @@ use termion::{input::TermRead, event::Key};
 
 
 fn main() {
+    // Define container that houses all of the variables
     let mut logic = Logic::new();
 
-
-
     // Logic Loop
-    loop {
-        // Get all inputs
 
-        
-        let stdin = std::io::stdin();
+    // Terminal
+    let stdin = std::io::stdin();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+    
+    // This loops forever.
+    for key in stdin.keys() {
+        match key.unwrap() {
+            // Quit key
+            Key::Ctrl('c') => {
+                // Leave raw mode and quit
+                stdout.suspend_raw_mode().unwrap();
+                std::process::exit(0);
+            }
 
-        /* 
-        for key in stdin.keys() {
-            match key.unwrap() {
-                Key::Ctrl('c') => {
-                    std::process::exit(0);
-                }
-                _ => {}
-            };
+            // Switch editing mode
+            Key::Insert => {
+                logic.edit_state = true;
+            }
+            _ => {}
         };
-        */
+        
+        render(&logic, &mut stdout);
+    };
 
-        
-        
-        render(&logic);
-        thread::sleep(time::Duration::from_millis(1))
-    }
 }
