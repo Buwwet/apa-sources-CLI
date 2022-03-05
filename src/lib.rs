@@ -16,8 +16,6 @@ pub struct ApaFormat {
     pub format: ApaFormatType,
     pub data: HashMap<usize, (String, String)>,
 }
-
-
 impl ApaFormat {
     pub fn new(format: ApaFormatType) -> ApaFormat {
         // Creates an empty version of the apa format.
@@ -40,6 +38,32 @@ impl ApaFormat {
         }
     }
 }
+// Fit everything into the format.
+impl fmt::Display for ApaFormat {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        
+        match self.format {
+            ApaFormatType::Website => {
+                // Get all of the fields.
+                let authors = self.data.get(&0).unwrap();
+                let date = self.data.get(&1).unwrap();
+                let title = self.data.get(&2).unwrap();
+                let publisher = self.data.get(&3).unwrap();
+                let URL = self.data.get(&4).unwrap();
+
+                write!(f, "{}. ({}). {}. {}. {}",
+                    authors.1,
+                    // If date is not found, add n.d
+                    if &date.1 != "" {&date.1} else {"n.d."},
+                    title.1,
+                    publisher.1,
+                    URL.1,
+                )
+            }
+        }
+    }
+}
+
 
 // Base logic of the program
 pub struct Logic {

@@ -50,8 +50,9 @@ fn main() {
                 logic.edit_state = !logic.edit_state;
                 // Set the cursor position.
                 logic.cursor_pos = logic.apa.data.get(&logic.selected).unwrap().1.len();
-                
+
             }
+
             /* Selecting Field State */
             Key::Down if !logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
                 // Prevent selecting something that doesn't exist ^
@@ -61,12 +62,59 @@ fn main() {
                 // Prevent underflow ^
                 logic.selected -= 1;
             }
-            /* Editing State */
-            
 
-            Key::Char(c) => {
-                
+            /* Editing State */
+            // Movement keys
+            Key::Left if logic.edit_state && logic.cursor_pos != 0 => {
+                logic.cursor_pos -= 1;
             }
+            Key::Right if logic.edit_state => {
+                // Get the field's length and check if it's bigger.
+                let apa_field = logic.apa.data.get(&logic.selected).unwrap();
+                if logic.cursor_pos < apa_field.1.len() {
+                    logic.cursor_pos += 1;
+                }
+            }
+            Key::Down if logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
+                // Prevent selecting something that doesn't exist ^
+                logic.selected += 1;
+
+                // If current position is too large, switch to field's length
+                let new_field_length = logic.apa.data.get(&logic.selected).unwrap().1.len();
+                if logic.cursor_pos > new_field_length {
+                    logic.cursor_pos = new_field_length;
+                }
+            }
+            Key::Up if logic.edit_state && logic.selected != 0 => {
+                // Prevent underflow ^
+                logic.selected -= 1;
+
+                // If current position is too large, switch to field's length
+                let new_field_length = logic.apa.data.get(&logic.selected).unwrap().1.len();
+                if logic.cursor_pos > new_field_length {
+                    logic.cursor_pos = new_field_length;
+                }
+            }
+
+            Key::Backspace if logic.edit_state && logic.cursor_pos != 0 => {
+                // Prevent deleting nothing ^
+                // Delete the last char from the string
+                let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
+                apa_field.1.remove(logic.cursor_pos - 1);
+
+                // Update the character position.
+                logic.cursor_pos -= 1;
+
+            }
+            Key::Char(c) if logic.edit_state => {
+                // Append the character to the end of the field
+                let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
+                apa_field.1.insert(logic.cursor_pos, c);
+
+                // Update the character position.
+                logic.cursor_pos += 1;
+            }
+            
 
             _ => {}
         };

@@ -31,14 +31,21 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
     // Draw the field's contents.
     for (i, apa_data) in logic.apa.data.iter() {
-        write!(stdout, "{} | {}",
+        write!(stdout, "{} | {}{}",
             Goto(3 + longest_field as u16, 3 + *i as u16),
+            termion::clear::UntilNewline,
             apa_data.1,
         ).unwrap();
 
         
         
     }
+
+    // Draw the "FINISHED" APA citation.
+    write!(stdout, "{} APA reference:\n{}",
+        Goto(1, logic.apa.data.len() as u16 + 3),
+        logic.apa
+    ).unwrap();
     
     // If in edit mode, move cursor at the end.
     if logic.edit_state {
