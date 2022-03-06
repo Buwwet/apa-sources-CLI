@@ -1,7 +1,7 @@
-use std::{io::{stdout, Write, Stdout}, str::Bytes};
+use std::{io::{stdout, Write, Stdout}, str::Bytes, ops::Range};
 
 use apa::{Logic, ApaFormatType};
-use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead};
+use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead, color::Fg};
 use termion::cursor::Goto;
 use termion::style;
 use termion::color;
@@ -31,9 +31,12 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
         let mut longest_field: usize = 0;
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names
-            write!(stdout, "{}{}",
+            write!(stdout, "{}{}{}{}",
                 Goto(3, 2 + *i as u16 + root_pos.1),
+
+                if logic.selected == *i && logic.edit_state { format!("{}", style::Blink) } else { "".to_string() },
                 apa_data.0,
+                style::Reset,
             ).unwrap();
 
             // Draw selector icon
@@ -49,25 +52,59 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
         }
 
         // Draw the field's contents.
+        const DISTANCE_COLOR: [u8; 3] = [1, 14, 4];
         for (i, apa_data) in logic.apa.data.iter() {
-            write!(stdout, "{} | {}{}",
+            
+            // Simulate lighting based on the distance to the distance from the cursor for the |
+            let mut lighting_value: usize = (logic.selected as i32 - *i as i32).abs() as usize;
+            if lighting_value >= DISTANCE_COLOR.len() { lighting_value = DISTANCE_COLOR.len() - 1 }
+
+
+            write!(stdout, "{} {}{}│{}{} {}{}",
                 Goto(3 + longest_field as u16, 2 + *i as u16 + root_pos.1),
+
+                style::Bold,
+                Fg(color::AnsiValue(DISTANCE_COLOR[lighting_value])),
+                Fg(color::Reset),
+                style::NoBold,
+
                 termion::clear::UntilNewline,
                 apa_data.1,
             ).unwrap();
         }
 
         // Draw the bar that separates the fields and link.
-        for i in 1..16 {
+        for i in 1..30 {
+            // Go to position
+            write!(stdout, "{}", 
+                Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
+            ).unwrap();
+
+            //write sytle
+            match i {
+                1 => {
+                    // Add style
+                    write!(stdout, "{}",
+                        Fg(color::LightCyan),
+                    ).unwrap();
+                }
+                30 => {
+                    // Remove style
+                    write!(stdout, "{}",
+                        Fg(color::Reset),
+                    ).unwrap();
+                }
+                _ => {}
+            }
+
+            // write letter
             match i {
                 _ if i == longest_field + 4 => {
-                    write!(stdout, "{}┴",
-                        Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
+                    write!(stdout, "┴",
                     ).unwrap();
                 }
                 _ => {
-                    write!(stdout, "{}─",
-                        Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
+                    write!(stdout, "─",
                     ).unwrap();
                 }
             }
