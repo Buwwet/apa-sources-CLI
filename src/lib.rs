@@ -41,7 +41,6 @@ impl ApaFormat {
         
         match format {
             ApaFormatType::Website => {
-                //TODO: remove answered fields
                     data.insert(0, ("authors".to_string(), "".to_string()));
                     data.insert(1, ("date".to_string(), "".to_string()));
                     data.insert(2, ("title".to_string(), "".to_string()));
@@ -74,15 +73,15 @@ impl fmt::Display for ApaFormat {
                 let URL = self.data.get(&4).unwrap();
 
                 write!(f, "{}. ({}). {}{}{}. {}. {}",
-                    authors.1,
+                    if &authors.1 != "" {&authors.1} else {"Author's Last Name, Initial(s)"},
                     // If date is not found, add n.d
                     if &date.1 != "" {&date.1} else {"n.d."},
 
                     style::Italic,
-                    title.1,
+                    if &title.1 != "" {&title.1} else {"Title of work"},
                     style::NoItalic,
 
-                    publisher.1,
+                    if &publisher.1 != "" {&publisher.1} else {"Website"},
                     URL.1,
                 )
             }
@@ -111,7 +110,6 @@ impl Logic {
             edit_state: false,
             selected: 0,
             cursor_pos: 0,
-            // TODO: create a menu to choose.
             apa: ApaFormat::new(ApaFormatType::None),
         }
     }
