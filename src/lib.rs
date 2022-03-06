@@ -8,6 +8,7 @@ pub enum ApaFormatType {
     None,
     Website,
     Newspaper,
+    Dictionary,
 }
 impl ApaFormatType {
     pub fn list() -> [ApaFormatType; 2] {
@@ -18,6 +19,7 @@ impl ApaFormatType {
         match self {
             Self::Website => "https://www.scribbr.com/apa-examples/website/",
             Self::Newspaper => "https://www.scribbr.com/apa-examples/website/",
+            Self::Dictionary =>  "https://www.scribbr.com/apa-examples/website/",
             Self::None => "",
         }
     }
@@ -28,6 +30,7 @@ impl fmt::Display for ApaFormatType {
         match *self {
             Self::Website => write!(f, "webpage"),
             Self::Newspaper => write!(f, "newspaper article"),
+            Self::Dictionary => write!(f, "dictionary entry"),
             Self::None => write!(f, "none"),
         }
     }
@@ -57,6 +60,15 @@ impl ApaFormat {
                 data.insert(3, ("newspaper".to_string(), "".to_string()));
                 data.insert(4, ("URL".to_string(), "".to_string()));
             }
+            ApaFormatType::Dictionary => {
+                data.insert(0, ("authors".to_string(), "".to_string()));
+                data.insert(1, ("date".to_string(), "".to_string()));
+                data.insert(2, ("word".to_string(), "".to_string()));
+                data.insert(3, ("editors".to_string(), "".to_string()));
+                data.insert(4, ("dictionary".to_string(), "".to_string()));
+                data.insert(5, ("publisher".to_string(), "".to_string()));
+                data.insert(6, ("URL".to_string(), "".to_string()));
+            }
 
             ApaFormatType::None => {}
         };
@@ -81,7 +93,7 @@ impl fmt::Display for ApaFormat {
 
                 write!(
                     f,
-                    "{}. ({}). {}. {}. {}",
+                    "{}. ({}). /{}/. {}. {}",
                     if &authors.1 != "" { &authors.1 } else {"Author's Last Name, Initial(s)"},
                     // If date is not found, add n.d
                     if &date.1 != "" { &date.1 } else { "n.d." },
@@ -100,7 +112,7 @@ impl fmt::Display for ApaFormat {
 
                 write!(
                     f,
-                    "{}. ({}). {}. {}. {}",
+                    "{}. ({}). {}. /{}/. {}",
                     // If text is not present, fill with tooltip.
                     if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
                     if &date.1 != "" { &date.1 } else { "n.d." },
@@ -108,6 +120,28 @@ impl fmt::Display for ApaFormat {
 
                     if &newspaper.1 != "" { &newspaper.1 } else { "Newspaper" },
 
+                    URL.1
+                )
+            }
+            ApaFormatType::Dictionary => {
+                // Get all of the fields.
+                let authors = self.data.get(&0).unwrap();
+                let date = self.data.get(&1).unwrap();
+                let word = self.data.get(&2).unwrap();
+                let editors = self.data.get(&3).unwrap();
+                let dictionary = self.data.get(&4).unwrap();
+                let publisher = self.data.get(&5).unwrap();
+                let URL = self.data.get(&6).unwrap();
+
+                write!(f,
+                    "{}. ({}). {}. In {} (Ed.). /{}/. {}. {}",
+                    // If text is not present, fill with tooltip.
+                    if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
+                    if &date.1 != "" {&date.1} else { "n.d." },
+                    if &word.1 != "" {&word.1} else { "Word" },
+                    if &editors.1 != "" {&editors.1} else { "Initial(s). Last Name" },
+                    if &dictionary.1 != "" {&dictionary.1} else { "Dictionary" },
+                    if &publisher.1 != "" {&publisher.1} else { "Publisher" },
                     URL.1
                 )
             }
