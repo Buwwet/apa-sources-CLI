@@ -57,9 +57,25 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
             ).unwrap();
         }
 
+        // Draw the bar that separates the fields and link.
+        for i in 1..16 {
+            match i {
+                _ if i == longest_field + 4 => {
+                    write!(stdout, "{}┴",
+                        Goto(i as u16, logic.apa.data.len() as u16 + 3)
+                    ).unwrap();
+                }
+                _ => {
+                    write!(stdout, "{}─",
+                        Goto(i as u16, logic.apa.data.len() as u16 + 3)
+                    ).unwrap();
+                }
+            }
+        }
+
         // Print link with more info on this type of apa format.
         write!(stdout, "{}More Info: {}{}{}{}{}{}",
-            Goto(1, logic.apa.data.len() as u16 + 3),
+            Goto(1, logic.apa.data.len() as u16 + 4),
             
             color::Fg(color::LightBlue),
             style::Underline,
@@ -71,10 +87,10 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
         // Draw the "FINISHED" APA citation.
         write!(stdout, "{}{}APA reference:{}    {}",
-            Goto(1, logic.apa.data.len() as u16 + 4),
+            Goto(1, logic.apa.data.len() as u16 + 5),
             termion::clear::UntilNewline,
 
-            Goto(1, logic.apa.data.len() as u16 + 5),
+            Goto(1, logic.apa.data.len() as u16 + 6),
             logic.apa
         ).unwrap();
         
