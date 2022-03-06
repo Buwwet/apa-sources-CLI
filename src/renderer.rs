@@ -31,12 +31,17 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
         let mut longest_field: usize = 0;
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names
-            write!(stdout, "{}{}{}{}",
+            write!(stdout, "{}{}{}{}{}{}{}",
                 Goto(3, 2 + *i as u16 + root_pos.1),
 
+                if logic.selected == *i && logic.edit_state { format!("{}", Fg(color::Yellow) ) } else { "".to_string() },
+                if logic.selected == *i && logic.edit_state { format!("{}", style::Invert) } else { "".to_string() },
                 if logic.selected == *i && logic.edit_state { format!("{}", style::Blink) } else { "".to_string() },
+
                 apa_data.0,
                 style::Reset,
+                Fg(color::Reset)
+                
             ).unwrap();
 
             // Draw selector icon
