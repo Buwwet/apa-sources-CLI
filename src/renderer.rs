@@ -86,12 +86,13 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
         ).unwrap();
 
         // Draw the "FINISHED" APA citation.
-        write!(stdout, "{}{}APA reference:{}    {}",
+        write!(stdout, "{}{}APA reference:{}    {}{}",
             Goto(1, logic.apa.data.len() as u16 + 4 + root_pos.1),
             termion::clear::UntilNewline,
 
             Goto(1, logic.apa.data.len() as u16 + 5 + root_pos.1),
-            logic.apa
+            logic.apa,
+            termion::clear::AfterCursor,
         ).unwrap();
         
         // If in edit mode, move cursor at the end.

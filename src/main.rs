@@ -5,7 +5,7 @@ mod renderer;
 use apa::{Logic, ApaFormatType, ApaFormat};
 use renderer::render;
 
-use std::{time, thread, io::stdout, fmt::write, io::Write};
+use std::{time, thread, io::stdout, fmt::write, io::Write, process::{Command, Stdio}};
 use termion::{input::TermRead, event::Key, raw::IntoRawMode, cursor::DetectCursorPos, terminal_size};
 
 
@@ -21,7 +21,7 @@ fn main() {
     let mut cursor_pos = stdout.cursor_pos().unwrap();
 
     // Check if there's enough space for the program below.
-    const PRINT_SIZE: u16 = 11;
+    const PRINT_SIZE: u16 = 14;
     if cursor_pos.1 + PRINT_SIZE >= terminal_size().unwrap().1 {
         // There is not enough space, so we scroll up.
         write!(stdout, "{}", termion::scroll::Up(PRINT_SIZE)).unwrap();
@@ -49,6 +49,7 @@ fn main() {
     // Render once to have a bit of content to show.
     render(&logic, &mut stdout, cursor_pos);
     // This loops forever.
+
     for key in stdin.keys() {
         match key.as_ref().unwrap() {
             /* Universal Keys */
@@ -61,9 +62,24 @@ fn main() {
                 logic.edit_state = false;
                 render(&logic, &mut stdout, cursor_pos);
 
-                // Show cursor and print the finished apa format.
+                // Show cursor
                 writeln!(stdout, "{}", termion::cursor::Show).unwrap();
                 stdout.flush().unwrap();
+
+                // Copy the apa to the clipboard
+                let apa_reference: String = format!("{}", logic.apa); 
+                
+                // Use with Ctrl V.
+                // Get the stdout of the echo command.
+                let echo = Command::new("echo").arg(&format!("{}", apa_reference))
+                    .stdout(Stdio::piped()).spawn().unwrap();
+
+                // Give it t xclip so we can paste it.
+                Command::new("xclip")
+                    .args(["-selection", "c"])
+                    .stdin(echo.stdout.unwrap())
+                    .spawn()
+                    .expect("xclip");
 
                 std::process::exit(0);
             }

@@ -1,21 +1,23 @@
-use std::{collections::HashMap, slice::Iter};
 use std::fmt;
+use std::{collections::HashMap, slice::Iter};
 
 use termion::style;
 
 #[derive(Clone, Copy)]
 pub enum ApaFormatType {
     None,
-    Website
+    Website,
+    Newspaper,
 }
 impl ApaFormatType {
     pub fn list() -> [ApaFormatType; 2] {
-        [ApaFormatType::Website, ApaFormatType::None]
+        [ApaFormatType::Website, ApaFormatType::Newspaper]
     }
     pub fn link(&self) -> &'static str {
         // Provide the link with more information.
         match self {
             Self::Website => "https://www.scribbr.com/apa-examples/website/",
+            Self::Newspaper => "https://www.scribbr.com/apa-examples/website/",
             Self::None => "",
         }
     }
@@ -25,6 +27,7 @@ impl fmt::Display for ApaFormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Website => write!(f, "webpage"),
+            Self::Newspaper => write!(f, "newspaper article"),
             Self::None => write!(f, "none"),
         }
     }
@@ -38,28 +41,32 @@ impl ApaFormat {
     pub fn new(format: ApaFormatType) -> ApaFormat {
         // Creates an empty version of the apa format.
         let mut data = HashMap::new();
-        
+
         match format {
             ApaFormatType::Website => {
-                    data.insert(0, ("authors".to_string(), "".to_string()));
-                    data.insert(1, ("date".to_string(), "".to_string()));
-                    data.insert(2, ("title".to_string(), "".to_string()));
-                    data.insert(3, ("website".to_string(), "".to_string()));
-                    data.insert(4, ("URL".to_string(), "".to_string())); 
-                }
+                data.insert(0, ("authors".to_string(), "".to_string()));
+                data.insert(1, ("date".to_string(), "".to_string()));
+                data.insert(2, ("title".to_string(), "".to_string()));
+                data.insert(3, ("website".to_string(), "".to_string()));
+                data.insert(4, ("URL".to_string(), "".to_string()));
+            }
+            ApaFormatType::Newspaper => {
+                data.insert(0, ("authors".to_string(), "".to_string()));
+                data.insert(1, ("date".to_string(), "".to_string()));
+                data.insert(2, ("title".to_string(), "".to_string()));
+                data.insert(3, ("newspaper".to_string(), "".to_string()));
+                data.insert(4, ("URL".to_string(), "".to_string()));
+            }
+
             ApaFormatType::None => {}
         };
 
-        ApaFormat {
-            format,
-            data
-        }
+        ApaFormat { format, data }
     }
 }
 // Fit everything into the format.
 impl fmt::Display for ApaFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        
         match self.format {
             ApaFormatType::None => {
                 write!(f, "none")
@@ -72,23 +79,41 @@ impl fmt::Display for ApaFormat {
                 let publisher = self.data.get(&3).unwrap();
                 let URL = self.data.get(&4).unwrap();
 
-                write!(f, "{}. ({}). {}{}{}. {}. {}",
-                    if &authors.1 != "" {&authors.1} else {"Author's Last Name, Initial(s)"},
+                write!(
+                    f,
+                    "{}. ({}). {}. {}. {}",
+                    if &authors.1 != "" { &authors.1 } else {"Author's Last Name, Initial(s)"},
                     // If date is not found, add n.d
-                    if &date.1 != "" {&date.1} else {"n.d."},
-
-                    style::Italic,
-                    if &title.1 != "" {&title.1} else {"Title of work"},
-                    style::NoItalic,
-
-                    if &publisher.1 != "" {&publisher.1} else {"Website"},
+                    if &date.1 != "" { &date.1 } else { "n.d." },
+                    if &title.1 != "" { &title.1 } else { "Title of work"},
+                    if &publisher.1 != "" { &publisher.1 } else { "Website" },
                     URL.1,
+                )
+            }
+            ApaFormatType::Newspaper => {
+                // Get all of the fields.
+                let authors = self.data.get(&0).unwrap();
+                let date = self.data.get(&1).unwrap();
+                let title = self.data.get(&2).unwrap();
+                let newspaper = self.data.get(&3).unwrap();
+                let URL = self.data.get(&4).unwrap();
+
+                write!(
+                    f,
+                    "{}. ({}). {}. {}. {}",
+                    // If text is not present, fill with tooltip.
+                    if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
+                    if &date.1 != "" { &date.1 } else { "n.d." },
+                    if &title.1 != "" { &title.1 } else { "Title of article" },
+
+                    if &newspaper.1 != "" { &newspaper.1 } else { "Newspaper" },
+
+                    URL.1
                 )
             }
         }
     }
 }
-
 
 // Base logic of the program
 pub struct Logic {
