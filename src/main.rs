@@ -6,36 +6,48 @@ use apa::{Logic, ApaFormatType, ApaFormat};
 use renderer::render;
 
 use std::{time, thread, io::stdout, fmt::write, io::Write};
-use termion::{input::TermRead, event::Key, raw::IntoRawMode};
+use termion::{input::TermRead, event::Key, raw::IntoRawMode, cursor::DetectCursorPos, terminal_size};
 
 
 fn main() {
     // Define container that houses all of the variables
     let mut logic = Logic::new();
 
-
     // Terminal
     let stdin = std::io::stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
+    // Dynamically placed cursor. Affects the Goto of all printing.
+    let mut cursor_pos = stdout.cursor_pos().unwrap();
+
+    // Check if there's enough space for the program below.
+    const PRINT_SIZE: u16 = 11;
+    if cursor_pos.1 + PRINT_SIZE >= terminal_size().unwrap().1 {
+        // There is not enough space, so we scroll up.
+        write!(stdout, "{}", termion::scroll::Up(PRINT_SIZE)).unwrap();
+        cursor_pos.1 -= PRINT_SIZE;
+    }
+    
     // Write the top header.
     write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
-        termion::cursor::Goto(1,1),
-        termion::clear::AfterCursor,
+        termion::cursor::Goto(1, cursor_pos.1),
+        termion::clear::CurrentLine,
         termion::color::Fg(termion::color::AnsiValue(7)),
         termion::style::Bold,
         termion::style::Invert,
 
-        termion::cursor::Goto(1,2),
+        termion::cursor::Goto(1, 1 + cursor_pos.1),
 
         termion::color::Bg(termion::color::Reset),
         termion::style::Reset,
     ).unwrap(); 
 
+    
+
     stdout.flush().unwrap();
     
     // Render once to have a bit of content to show.
-    render(&logic, &mut stdout);
+    render(&logic, &mut stdout, cursor_pos);
     // This loops forever.
     for key in stdin.keys() {
         match key.as_ref().unwrap() {
@@ -47,7 +59,7 @@ fn main() {
 
                 // Quick fix to exit the program with the cursor at the bottom.
                 logic.edit_state = false;
-                render(&logic, &mut stdout);
+                render(&logic, &mut stdout, cursor_pos);
 
                 // Show cursor and print the finished apa format.
                 writeln!(stdout, "{}", termion::cursor::Show).unwrap();
@@ -62,11 +74,10 @@ fn main() {
         if !logic.selecting_format {
         match key.as_ref().unwrap() {
             // Switch editing mode
-            Key::Char('\n') => {
+            Key::Char('\n') | Key::Char('\t') => {
                 logic.edit_state = !logic.edit_state;
                 // Set the cursor position.
                 logic.cursor_pos = logic.apa.data.get(&logic.selected).unwrap().1.len();
-
             }
 
             /* Selecting Field State */
@@ -160,7 +171,7 @@ fn main() {
                     logic.selecting_format = false;
                     // Write top header.
                     write!(stdout, "{}{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
-                        termion::cursor::Goto(1,1),
+                        termion::cursor::Goto(1, cursor_pos.1),
                         termion::clear::AfterCursor,
                         termion::color::Fg(termion::color::AnsiValue(7)),
                         termion::style::Bold,
@@ -170,7 +181,7 @@ fn main() {
                         logic.apa.format,
                         termion::style::NoItalic,
 
-                        termion::cursor::Goto(1,2),
+                        termion::cursor::Goto(1, 1 + cursor_pos.1),
 
                         termion::color::Bg(termion::color::Reset),
                         termion::color::Fg(termion::color::Reset),
@@ -183,6 +194,6 @@ fn main() {
             }
         }
         
-        render(&logic, &mut stdout);
+        render(&logic, &mut stdout, cursor_pos);
     };
 }

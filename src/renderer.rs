@@ -6,13 +6,13 @@ use termion::cursor::Goto;
 use termion::style;
 use termion::color;
 
-pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
+pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, u16)) {
     // Select format
     if logic.selecting_format {
         let format_list = ApaFormatType::list();
 
         write!(stdout, "{}Select a format: ",
-            Goto(1, 3)
+            Goto(1, 2 + root_pos.1)
         ).unwrap();
 
         // For each format present, print it.
@@ -32,13 +32,13 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names
             write!(stdout, "{}{}",
-                Goto(3, 3 + *i as u16),
+                Goto(3, 2 + *i as u16 + root_pos.1),
                 apa_data.0,
             ).unwrap();
 
             // Draw selector icon
             write!(stdout, "{}{}",
-                Goto(1, 3 + *i as u16),
+                Goto(1, 2 + *i as u16 + root_pos.1),
                 if logic.selected == *i {">"} else {" "}
             ).unwrap();
 
@@ -51,7 +51,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
         // Draw the field's contents.
         for (i, apa_data) in logic.apa.data.iter() {
             write!(stdout, "{} | {}{}",
-                Goto(3 + longest_field as u16, 3 + *i as u16),
+                Goto(3 + longest_field as u16, 2 + *i as u16 + root_pos.1),
                 termion::clear::UntilNewline,
                 apa_data.1,
             ).unwrap();
@@ -62,12 +62,12 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
             match i {
                 _ if i == longest_field + 4 => {
                     write!(stdout, "{}┴",
-                        Goto(i as u16, logic.apa.data.len() as u16 + 3)
+                        Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
                     ).unwrap();
                 }
                 _ => {
                     write!(stdout, "{}─",
-                        Goto(i as u16, logic.apa.data.len() as u16 + 3)
+                        Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
                     ).unwrap();
                 }
             }
@@ -75,7 +75,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
         // Print link with more info on this type of apa format.
         write!(stdout, "{}More Info: {}{}{}{}{}{}",
-            Goto(1, logic.apa.data.len() as u16 + 4),
+            Goto(1, logic.apa.data.len() as u16 + 3 + root_pos.1),
             
             color::Fg(color::LightBlue),
             style::Underline,
@@ -87,10 +87,10 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
 
         // Draw the "FINISHED" APA citation.
         write!(stdout, "{}{}APA reference:{}    {}",
-            Goto(1, logic.apa.data.len() as u16 + 5),
+            Goto(1, logic.apa.data.len() as u16 + 4 + root_pos.1),
             termion::clear::UntilNewline,
 
-            Goto(1, logic.apa.data.len() as u16 + 6),
+            Goto(1, logic.apa.data.len() as u16 + 5 + root_pos.1),
             logic.apa
         ).unwrap();
         
@@ -100,7 +100,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>) {
                 termion::cursor::Show,
                 Goto(
                     6 + logic.cursor_pos as u16 + longest_field as u16,
-                    3 + logic.selected as u16
+                    2 + logic.selected as u16 + root_pos.1
                 )
             ).unwrap()
         } else {
