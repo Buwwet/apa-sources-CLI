@@ -11,11 +11,12 @@ pub enum ApaFormatType {
     Dictionary,
 }
 impl ApaFormatType {
-    pub fn list() -> [ApaFormatType; 2] {
-        [ApaFormatType::Website, ApaFormatType::Newspaper]
+    // Used for the generation of the format list.
+    pub fn list() -> [ApaFormatType; 3] {
+        [ApaFormatType::Website, ApaFormatType::Newspaper, ApaFormatType::Dictionary]
     }
     pub fn link(&self) -> &'static str {
-        // Provide the link with more information.
+        // Provide the link with more information about the format.
         match self {
             Self::Website => "https://www.scribbr.com/apa-examples/website/",
             Self::Newspaper => "https://www.scribbr.com/apa-examples/website/",
@@ -28,6 +29,7 @@ impl ApaFormatType {
 impl fmt::Display for ApaFormatType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            // display the name for the format list.
             Self::Website => write!(f, "webpage"),
             Self::Newspaper => write!(f, "newspaper article"),
             Self::Dictionary => write!(f, "dictionary entry"),
@@ -37,6 +39,8 @@ impl fmt::Display for ApaFormatType {
 }
 
 pub struct ApaFormat {
+    // An apa format contains its type and a hashmap with fields representing
+    // its parts.
     pub format: ApaFormatType,
     pub data: HashMap<usize, (String, String)>,
 }
@@ -46,6 +50,7 @@ impl ApaFormat {
         let mut data = HashMap::new();
 
         match format {
+            // Each format has a different amount and types of fields.
             ApaFormatType::Website => {
                 data.insert(0, ("authors".to_string(), "".to_string()));
                 data.insert(1, ("date".to_string(), "".to_string()));
@@ -69,7 +74,6 @@ impl ApaFormat {
                 data.insert(5, ("publisher".to_string(), "".to_string()));
                 data.insert(6, ("URL".to_string(), "".to_string()));
             }
-
             ApaFormatType::None => {}
         };
 
@@ -83,6 +87,7 @@ impl fmt::Display for ApaFormat {
             ApaFormatType::None => {
                 write!(f, "none")
             }
+            // Defines how each apa format is structured and 
             ApaFormatType::Website => {
                 // Get all of the fields.
                 let authors = self.data.get(&0).unwrap();
@@ -150,6 +155,7 @@ impl fmt::Display for ApaFormat {
 }
 
 // Base logic of the program
+// Used by main to change the logic state for the renderer in a loop.
 pub struct Logic {
     /* APA format selector */
     pub selecting_format: bool,

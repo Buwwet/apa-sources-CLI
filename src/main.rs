@@ -41,18 +41,14 @@ fn main() {
         termion::color::Bg(termion::color::Reset),
         termion::style::Reset,
     ).unwrap(); 
-
-    
-
     stdout.flush().unwrap();
     
     // Render once to have a bit of content to show.
     render(&logic, &mut stdout, cursor_pos);
-    // This loops forever.
-
+    // This loops forever and houses the logic of the program.
     for key in stdin.keys() {
         match key.as_ref().unwrap() {
-            /* Universal Keys */
+        /* Universal Keys */
             // Quit key
             Key::Ctrl('c') => {
                 // Leave raw mode and quit
@@ -86,7 +82,7 @@ fn main() {
             _ => {}
         }
 
-        /* APA editing mode */
+    /* APA editing mode */
         if !logic.selecting_format {
         match key.as_ref().unwrap() {
             // Switch editing mode
@@ -111,7 +107,7 @@ fn main() {
                 apa_field.1 = "".to_string();
             }
 
-            /* Editing State */
+        /* Editing State */
             // Movement keys
             Key::Left if logic.edit_state && logic.cursor_pos != 0 => {
                 logic.cursor_pos -= 1;
@@ -143,7 +139,7 @@ fn main() {
                     logic.cursor_pos = new_field_length;
                 }
             }
-
+            // Editing the text present using the cursor position and char.
             Key::Backspace if logic.edit_state && logic.cursor_pos != 0 => {
                 // Prevent deleting nothing ^
                 // Delete the last char from the string
@@ -167,13 +163,13 @@ fn main() {
         };
         }
 
-        /* APA selecting mode */
+    /* APA selecting mode */
         if logic.selecting_format 
         {
             let format_num: usize = ApaFormatType::list().len();
 
             match key.as_ref().unwrap() {
-                /* Selection Keys */
+            /* Selection Keys */
                 Key::Left if logic.selected != 0 => {
                     logic.selected -= 1;
                 }
@@ -203,8 +199,6 @@ fn main() {
                         termion::color::Fg(termion::color::Reset),
                         termion::style::Reset,
                     ).unwrap(); 
-
-                    // Clear out the junk
                 }
                 _ => {}
             }

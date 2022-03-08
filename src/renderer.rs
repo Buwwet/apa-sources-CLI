@@ -57,21 +57,14 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
         }
 
         // Draw the field's contents.
-        const DISTANCE_COLOR: [u8; 3] = [1, 14, 4];
         for (i, apa_data) in logic.apa.data.iter() {
             
-            // Simulate lighting based on the distance to the distance from the cursor for the |
-            let mut lighting_value: usize = (logic.selected as i32 - *i as i32).abs() as usize;
-            if lighting_value >= DISTANCE_COLOR.len() { lighting_value = DISTANCE_COLOR.len() - 1 }
-
-
-            write!(stdout, "{} {}{}│{}{} {}{}",
+            write!(stdout, "{} │{}{} {}{}",
                 Goto(3 + longest_field as u16, 2 + *i as u16 + root_pos.1),
 
-                style::Bold,
-                Fg(color::AnsiValue(DISTANCE_COLOR[lighting_value])),
+                // Lightup the beam of the selected field                
                 Fg(color::Reset),
-                style::NoBold,
+                style::Reset,
 
                 termion::clear::UntilNewline,
                 apa_data.1,
@@ -90,7 +83,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
                 1 => {
                     // Add style
                     write!(stdout, "{}",
-                        Fg(color::LightCyan),
+                        Fg(color::Reset),
                     ).unwrap();
                 }
                 30 => {
