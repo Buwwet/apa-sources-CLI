@@ -4,6 +4,7 @@ mod renderer;
 
 use apa::{Logic, ApaFormatType, ApaFormat};
 use renderer::render;
+use unicode_segmentation::UnicodeSegmentation;
 
 use std::{time, thread, io::stdout, fmt::write, io::Write, process::{Command, Stdio}};
 use termion::{input::TermRead, event::Key, raw::IntoRawMode, cursor::DetectCursorPos, terminal_size};
@@ -144,7 +145,17 @@ fn main() {
                 // Prevent deleting nothing ^
                 // Delete the last char from the string
                 let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
-                apa_field.1.remove(logic.cursor_pos - 1);
+                
+                // Firstly, divide the apa field to graphene_clusters
+                let mut graphene_fields = UnicodeSegmentation::graphemes(apa_field.1.as_str(), true).collect::<Vec<&str>>();
+                // Remove the character found before the cursor.
+                graphene_fields.remove(logic.cursor_pos - 1);
+                
+                // Update the apa field with the remaining clusters.
+                apa_field.1 = graphene_fields.iter()
+                    .map(|cluster| {cluster.to_string()})
+                    .collect();
+
 
                 // Update the character position.
                 logic.cursor_pos -= 1;
@@ -153,10 +164,24 @@ fn main() {
             Key::Char(c) if logic.edit_state => {
                 // Append the character to the end of the field
                 let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
-                apa_field.1.insert(logic.cursor_pos, *c);
+
+                // Divde the apa format to graphene fields
+                let mut graphene_fields = UnicodeSegmentation::graphemes(apa_field.1.as_str(), true).collect::<Vec<&str>>();
+                
+                // Define the character we will insert into a &str
+                let character: &str = &c.to_string();
+                // Insert the character where the cursor is located.
+                graphene_fields.insert(logic.cursor_pos, character);
+                
+                let new_cursor_pos = graphene_fields.len();
+
+                // Update the field with the graphene_fields turned into a String from a Vec<&str>.
+                apa_field.1 = graphene_fields.iter()
+                    .map(|cluster| {cluster.to_string()})
+                    .collect();
 
                 // Update the character position.
-                logic.cursor_pos += 1;
+                logic.cursor_pos = new_cursor_pos;
             }
             
             _ => {}
