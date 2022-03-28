@@ -98,7 +98,7 @@ impl fmt::Display for ApaFormat {
 
                 write!(
                     f,
-                    "{}. ({}). /{}/. {}. {}",
+                    "{}. ({}). <i>{}</i>. {}. {}",
                     if &authors.1 != "" { &authors.1 } else {"Author's Last Name, Initial(s)"},
                     // If date is not found, add n.d
                     if &date.1 != "" { &date.1 } else { "n.d." },
@@ -117,7 +117,7 @@ impl fmt::Display for ApaFormat {
 
                 write!(
                     f,
-                    "{}. ({}). {}. /{}/. {}",
+                    "{}. ({}). {}. <i>{}</i>. {}",
                     // If text is not present, fill with tooltip.
                     if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
                     if &date.1 != "" { &date.1 } else { "n.d." },
@@ -139,7 +139,7 @@ impl fmt::Display for ApaFormat {
                 let URL = self.data.get(&6).unwrap();
 
                 write!(f,
-                    "{}. ({}). {}. In {} (Ed.). /{}/. {}. {}",
+                    "{}. ({}). {}. In {} (Ed.). <i>{}</i>. {}. {}",
                     // If text is not present, fill with tooltip.
                     if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
                     if &date.1 != "" {&date.1} else { "n.d." },
