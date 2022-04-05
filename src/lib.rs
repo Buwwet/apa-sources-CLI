@@ -1,7 +1,8 @@
-use std::fmt;
+use std::{fmt, thread, time::Duration};
 use std::{collections::HashMap, slice::Iter};
 
 use termion::style;
+use x11_clipboard::Clipboard;
 
 #[derive(Clone, Copy)]
 pub enum ApaFormatType {
@@ -160,6 +161,8 @@ pub struct Logic {
     /* APA format selector */
     pub selecting_format: bool,
 
+    /* APA copying state (process must be alive to save to clipboard.) */
+
     /* APA editor */
     pub edit_state: bool,
     pub selected: usize,
@@ -178,4 +181,19 @@ impl Logic {
             apa: ApaFormat::new(ApaFormatType::None),
         }
     }
+}
+
+pub fn save_to_x11_clipboard(format_apa: ApaFormat) {
+    // Create clipboard
+    let clipboard = Clipboard::new().unwrap();
+
+    clipboard.store(
+        //Where?
+        clipboard.getter.atoms.clipboard, 
+        // Determine format.
+        clipboard.getter.get_atom("text/html").unwrap(), 
+        format!("<meta http-equiv=\"content-type\" content=\"text; charset=utf-8\">{}", format_apa),
+    ).unwrap();
+
+    thread::sleep(Duration::from_millis(10000));
 }

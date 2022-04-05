@@ -2,7 +2,7 @@ mod lib;
 mod renderer;
 
 
-use apa::{Logic, ApaFormatType, ApaFormat};
+use apa::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard};
 use renderer::render;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -63,20 +63,8 @@ fn main() {
                 writeln!(stdout, "{}", termion::cursor::Show).unwrap();
                 stdout.flush().unwrap();
 
-                // Copy the apa to the clipboard
-                let apa_reference: String = format!("{}", logic.apa); 
-                
-                // Use with Ctrl V.
-                // Get the stdout of the echo command.
-                let echo = Command::new("echo").arg(&format!("{}", apa_reference))
-                    .stdout(Stdio::piped()).spawn().unwrap();
-
-                // Give it t xclip so we can paste it.
-                Command::new("xclip")
-                    .args(["-selection", "c"])
-                    .stdin(echo.stdout.unwrap())
-                    .spawn()
-                    .expect("xclip");
+                // Copy the apa to the clipboard x11;
+                save_to_x11_clipboard(logic.apa);
 
                 std::process::exit(0);
             }

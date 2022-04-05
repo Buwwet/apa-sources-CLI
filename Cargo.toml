@@ -6,5 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Print to the terminal
 termion = "1.5.6"
+# Segmenting of characters for manipulation.
 unicode-segmentation = "1.9.0"
+# X11 clipboard support.
+x11-clipboard = "0.6.0"
