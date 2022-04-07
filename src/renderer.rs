@@ -1,15 +1,43 @@
 use std::{io::{stdout, Write, Stdout}, str::Bytes, ops::Range};
 
 use apa::{Logic, ApaFormatType, LogicState};
-use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead, color::Fg};
+use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead, color::Fg, terminal_size, cursor::DetectCursorPos};
 use termion::cursor::Goto;
 use termion::style;
 use termion::color;
 
 pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, u16)) {
+
+    // Dynamically placed cursor. Affects the Goto of all printing.
+    let mut cursor_pos = stdout.cursor_pos().unwrap();
+
+    // Check if there's enough space for the program below.
+    const PRINT_SIZE: u16 = 14;
+    if cursor_pos.1 + PRINT_SIZE >= terminal_size().unwrap().1 {
+        // There is not enough space, so we scroll up.
+        write!(stdout, "{}", termion::scroll::Up(PRINT_SIZE)).unwrap();
+        cursor_pos.1 -= PRINT_SIZE;
+    }
+
     // Select format
     if logic.state == LogicState::SelectingFormat {
         let format_list = ApaFormatType::list();
+
+        
+        // Write the top header.
+        write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
+            termion::cursor::Goto(1, root_pos.1),
+            termion::clear::CurrentLine,
+            termion::color::Fg(termion::color::AnsiValue(7)),
+            termion::style::Bold,
+            termion::style::Invert,
+
+            termion::cursor::Goto(1, 1 + root_pos.1),
+
+            termion::color::Bg(termion::color::Reset),
+            termion::style::Reset,
+        ).unwrap(); 
+        
 
         write!(stdout, "{}Select a format: ",
             Goto(1, 2 + root_pos.1)
@@ -28,6 +56,25 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
 
     // Add each field in the apa data, calculate which is the longest one
     if logic.state == LogicState::EditState {
+
+        // Write top header.
+        write!(stdout, "{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
+            termion::cursor::Goto(1, root_pos.1),
+            termion::color::Fg(termion::color::AnsiValue(7)),
+            termion::style::Bold,
+            termion::style::Invert,
+
+            termion::style::Italic,
+            logic.apa.format,
+            termion::style::NoItalic,
+
+            termion::cursor::Goto(1, 1 + root_pos.1),
+
+            termion::color::Bg(termion::color::Reset),
+            termion::color::Fg(termion::color::Reset),
+            termion::style::Reset,
+        ).unwrap(); 
+
         let mut longest_field: usize = 0;
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names

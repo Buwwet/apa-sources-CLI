@@ -33,18 +33,6 @@ fn main() {
     }
     
     // Write the top header.
-    write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
-        termion::cursor::Goto(1, cursor_pos.1),
-        termion::clear::CurrentLine,
-        termion::color::Fg(termion::color::AnsiValue(7)),
-        termion::style::Bold,
-        termion::style::Invert,
-
-        termion::cursor::Goto(1, 1 + cursor_pos.1),
-
-        termion::color::Bg(termion::color::Reset),
-        termion::style::Reset,
-    ).unwrap(); 
     stdout.flush().unwrap();
     
     // Render once to have a bit of content to show.
@@ -201,24 +189,8 @@ fn main() {
                     logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
                     logic.selected = 0;
                     logic.state = LogicState::EditState;
-                    // Write top header.
-                    write!(stdout, "{}{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
-                        termion::cursor::Goto(1, cursor_pos.1),
-                        termion::clear::AfterCursor,
-                        termion::color::Fg(termion::color::AnsiValue(7)),
-                        termion::style::Bold,
-                        termion::style::Invert,
-
-                        termion::style::Italic,
-                        logic.apa.format,
-                        termion::style::NoItalic,
-
-                        termion::cursor::Goto(1, 1 + cursor_pos.1),
-
-                        termion::color::Bg(termion::color::Reset),
-                        termion::color::Fg(termion::color::Reset),
-                        termion::style::Reset,
-                    ).unwrap(); 
+                    // Clear the screen.
+                    write!(stdout, "{}{}", termion::cursor::Goto(1, cursor_pos.1),termion::clear::AfterCursor).unwrap();
                 }
                 _ => {}
             }
