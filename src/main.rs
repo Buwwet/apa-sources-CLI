@@ -2,7 +2,7 @@ mod lib;
 mod renderer;
 
 
-use apa::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard};
+use apa::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard, LogicState};
 use renderer::render;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -56,7 +56,7 @@ fn main() {
                 stdout.suspend_raw_mode().unwrap();
 
                 // Quick fix to exit the program with the cursor at the bottom.
-                logic.edit_state = false;
+                logic.state = LogicState::Result;
                 render(&logic, &mut stdout, cursor_pos);
 
                 // Show cursor
@@ -72,7 +72,7 @@ fn main() {
         }
 
     /* APA editing mode */
-        if !logic.selecting_format {
+        if logic.state == LogicState::EditState {
         match key.as_ref().unwrap() {
             // Switch editing mode
             Key::Char('\n') | Key::Char('\t') => {
@@ -177,8 +177,7 @@ fn main() {
         }
 
     /* APA selecting mode */
-        if logic.selecting_format 
-        {
+        if logic.state == LogicState::SelectingFormat {
             let format_num: usize = ApaFormatType::list().len();
 
             match key.as_ref().unwrap() {
@@ -193,7 +192,7 @@ fn main() {
                 Key::Char('\n') => {
                     logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
                     logic.selected = 0;
-                    logic.selecting_format = false;
+                    logic.state = LogicState::EditState;
                     // Write top header.
                     write!(stdout, "{}{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
                         termion::cursor::Goto(1, cursor_pos.1),

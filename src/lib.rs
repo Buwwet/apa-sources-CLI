@@ -158,11 +158,7 @@ impl fmt::Display for ApaFormat {
 // Base logic of the program
 // Used by main to change the logic state for the renderer in a loop.
 pub struct Logic {
-    /* APA format selector */
-    pub selecting_format: bool,
-
-    /* APA copying state (process must be alive to save to clipboard.) */
-
+    pub state: LogicState,
     /* APA editor */
     pub edit_state: bool,
     pub selected: usize,
@@ -171,10 +167,20 @@ pub struct Logic {
     pub apa: ApaFormat,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum LogicState {
+    /* APA format selector */
+    SelectingFormat,
+    /* APA editor */
+    EditState,
+    /* APA copying state (process must be alive to save to clipboard.) */
+    Result
+}
+
 impl Logic {
     pub fn new() -> Logic {
         Logic {
-            selecting_format: true,
+            state: LogicState::SelectingFormat,
             edit_state: false,
             selected: 0,
             cursor_pos: 0,

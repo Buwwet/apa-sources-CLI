@@ -1,6 +1,6 @@
 use std::{io::{stdout, Write, Stdout}, str::Bytes, ops::Range};
 
-use apa::{Logic, ApaFormatType};
+use apa::{Logic, ApaFormatType, LogicState};
 use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead, color::Fg};
 use termion::cursor::Goto;
 use termion::style;
@@ -8,7 +8,7 @@ use termion::color;
 
 pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, u16)) {
     // Select format
-    if logic.selecting_format {
+    if logic.state == LogicState::SelectingFormat {
         let format_list = ApaFormatType::list();
 
         write!(stdout, "{}Select a format: ",
@@ -27,13 +27,14 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
     }
 
     // Add each field in the apa data, calculate which is the longest one
-    if !logic.selecting_format {
+    if logic.state == LogicState::EditState {
         let mut longest_field: usize = 0;
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names
             write!(stdout, "{}{}{}{}{}{}{}",
                 Goto(3, 2 + *i as u16 + root_pos.1),
 
+                // Add color if selected
                 if logic.selected == *i && logic.edit_state { format!("{}", Fg(color::Yellow) ) } else { "".to_string() },
                 if logic.selected == *i && logic.edit_state { format!("{}", style::Invert) } else { "".to_string() },
                 if logic.selected == *i && logic.edit_state { format!("{}", style::Blink) } else { "".to_string() },
