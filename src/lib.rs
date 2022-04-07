@@ -189,9 +189,10 @@ impl Logic {
     }
 }
 
-pub fn save_to_x11_clipboard(format_apa: ApaFormat) {
+pub fn save_to_x11_clipboard(clipboard: &Clipboard, format_apa: &ApaFormat) {
     // Create clipboard
-    let clipboard = Clipboard::new().unwrap();
+    //TODO: MAYBE IT DOESN'T WORK BECAUSE THE CLIPBOARD GOES OUT OF SCOPE INSTANTLY ANYWAYS:
+    // FIX BY CREATING THE CLIPBOARD IN MAIN.
 
     clipboard.store(
         //Where?
@@ -201,5 +202,5 @@ pub fn save_to_x11_clipboard(format_apa: ApaFormat) {
         format!("<meta http-equiv=\"content-type\" content=\"text; charset=utf-8\">{}", format_apa),
     ).unwrap();
 
-    thread::sleep(Duration::from_millis(10000));
+    //thread::sleep(Duration::from_millis(10000));
 }

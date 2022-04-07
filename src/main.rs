@@ -5,14 +5,17 @@ mod renderer;
 use apa::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard, LogicState};
 use renderer::render;
 use unicode_segmentation::UnicodeSegmentation;
+use x11_clipboard::Clipboard;
 
-use std::{time, thread, io::stdout, fmt::write, io::Write, process::{Command, Stdio}};
+use std::{time, thread, io::stdout, fmt::write, io::Write, process::{Command, Stdio, self}};
 use termion::{input::TermRead, event::Key, raw::IntoRawMode, cursor::DetectCursorPos, terminal_size};
 
 
 fn main() {
     // Define container that houses all of the variables
     let mut logic = Logic::new();
+    let clipboard = Clipboard::new().unwrap();
+
 
     // Terminal
     let stdin = std::io::stdin();
@@ -48,29 +51,34 @@ fn main() {
     render(&logic, &mut stdout, cursor_pos);
     // This loops forever and houses the logic of the program.
     for key in stdin.keys() {
-        match key.as_ref().unwrap() {
-        /* Universal Keys */
-            // Quit key
-            Key::Ctrl('c') => {
-                // Leave raw mode and quit
-                stdout.suspend_raw_mode().unwrap();
 
-                // Quick fix to exit the program with the cursor at the bottom.
-                logic.state = LogicState::Result;
-                render(&logic, &mut stdout, cursor_pos);
+        if logic.state != LogicState::Result {
+            match key.as_ref().unwrap() {
+                /* Universal Keys */
+                    // Quit to final result key.
+                    Key::Ctrl('c') => {
+                        // Quick fix to exit the program with the cursor at the bottom.
+                        logic.state = LogicState::Result;
+                        render(&logic, &mut stdout, cursor_pos);
+        
+                        // Copy the apa to the clipboard x11;
+                        save_to_x11_clipboard(&clipboard,&logic.apa);
+                    }
+                    _ => {}
+                }
+        } else { /* SUCCESSFULLY LEAVE THE PROGRAM */
+            // Leave on any key when in the Result Screen.
+            println!("\nLEAVING");
+            // Leave raw mode and quit
+            stdout.suspend_raw_mode().unwrap();
 
-                // Show cursor
-                writeln!(stdout, "{}", termion::cursor::Show).unwrap();
-                stdout.flush().unwrap();
+            // Show cursor
+            writeln!(stdout, "{}", termion::cursor::Show).unwrap();
+            stdout.flush().unwrap();
 
-                // Copy the apa to the clipboard x11;
-                save_to_x11_clipboard(logic.apa);
-
-                std::process::exit(0);
-            }
-            _ => {}
+            process::exit(1);
         }
-
+        
     /* APA editing mode */
         if logic.state == LogicState::EditState {
         match key.as_ref().unwrap() {
@@ -215,7 +223,9 @@ fn main() {
                 _ => {}
             }
         }
-        
-        render(&logic, &mut stdout, cursor_pos);
+
+        if logic.state != LogicState::Result {
+            render(&logic, &mut stdout, cursor_pos);
+        }
     };
 }
