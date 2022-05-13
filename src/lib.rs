@@ -181,7 +181,7 @@ impl Logic {
     pub fn new() -> Logic {
         Logic {
             state: LogicState::SelectingFormat,
-            edit_state: false,
+            edit_state: true,
             selected: 0,
             cursor_pos: 0,
             apa: ApaFormat::new(ApaFormatType::None),

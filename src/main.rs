@@ -70,15 +70,16 @@ fn main() {
     /* APA editing mode */
         if logic.state == LogicState::EditState {
         match key.as_ref().unwrap() {
-            // Switch editing mode
-            Key::Char('\n') | Key::Char('\t') => {
+            // Switch editing mode with tab
+            Key::Char('\t') => {
                 logic.edit_state = !logic.edit_state;
                 // Set the cursor position.
                 logic.cursor_pos = logic.apa.data.get(&logic.selected).unwrap().1.len();
             }
 
             /* Selecting Field State */
-            Key::Down if !logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
+            // By pressing down or enter
+            Key::Char('\n') | Key::Down if !logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
                 // Prevent selecting something that doesn't exist ^
                 logic.selected += 1;
             }
@@ -104,7 +105,7 @@ fn main() {
                     logic.cursor_pos += 1;
                 }
             }
-            Key::Down if logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
+            Key::Down | Key::Char('\n') if logic.edit_state && logic.selected < logic.apa.data.len() - 1  => {
                 // Prevent selecting something that doesn't exist ^
                 logic.selected += 1;
 
@@ -146,6 +147,8 @@ fn main() {
 
             }
             Key::Char(c) if logic.edit_state => {
+                if c == &'\n' {continue};
+
                 // Append the character to the end of the field
                 let apa_field = &mut logic.apa.data.get_mut(&logic.selected).unwrap();
 
