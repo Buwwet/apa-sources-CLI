@@ -44,41 +44,40 @@ pub struct ApaFormat {
     // its parts.
     pub format: ApaFormatType,
     pub data: HashMap<usize, (String, String)>,
+
+    //TODO
+    pub placeholders: HashMap<usize, (String, String)>,
 }
 impl ApaFormat {
     pub fn new(format: ApaFormatType) -> ApaFormat {
         // Creates an empty version of the apa format.
-        let mut data = HashMap::new();
+        let mut data: HashMap<usize, (String, String)> = HashMap::new();
+        let mut placeholders: HashMap<usize, (String, String)> = HashMap::new();
 
         match format {
             // Each format has a different amount and types of fields.
             ApaFormatType::Website => {
-                data.insert(0, ("authors".to_string(), "".to_string()));
-                data.insert(1, ("date".to_string(), "".to_string()));
-                data.insert(2, ("title".to_string(), "".to_string()));
-                data.insert(3, ("website".to_string(), "".to_string()));
-                data.insert(4, ("URL".to_string(), "".to_string()));
+                const fields: &'static [&'static str] = &["authors","date", "title", "website", "URL"];
+                const field_placeholders: &'static [&'static str] = &["Author's Last Name, Initial(s)","date", "Title the article", "Website", "URL"];
+                data.fill_with_fields(fields, None);
+                placeholders.fill_with_fields(fields, Some(field_placeholders));
             }
             ApaFormatType::Newspaper => {
-                data.insert(0, ("authors".to_string(), "".to_string()));
-                data.insert(1, ("date".to_string(), "".to_string()));
-                data.insert(2, ("title".to_string(), "".to_string()));
-                data.insert(3, ("newspaper".to_string(), "".to_string()));
-                data.insert(4, ("URL".to_string(), "".to_string()));
+                const fields: &'static [&'static str] = &["authors","date", "title", "newspaper", "URL"];
+                const field_placeholders: &'static [&'static str] = &["Author's Last Name, Initial(s)","date", "Title the article", "Newspaper", "URL"];
+                data.fill_with_fields(fields, None);
+                placeholders.fill_with_fields(fields, Some(field_placeholders));
             }
             ApaFormatType::Dictionary => {
-                data.insert(0, ("authors".to_string(), "".to_string()));
-                data.insert(1, ("date".to_string(), "".to_string()));
-                data.insert(2, ("word".to_string(), "".to_string()));
-                data.insert(3, ("editors".to_string(), "".to_string()));
-                data.insert(4, ("dictionary".to_string(), "".to_string()));
-                data.insert(5, ("publisher".to_string(), "".to_string()));
-                data.insert(6, ("URL".to_string(), "".to_string()));
+                const fields: &'static [&'static str] = &["authors", "date", "word", "editors", "dictionary", "publisher", "URL"];
+                const field_placeholders: &'static [&'static str] = &["Author's Last Name, Initial(s)","date", "Word", "Editors's Initial(s). Last Name", "Dictionary", "Publisher", "URL"];
+                data.fill_with_fields(fields, None);
+                placeholders.fill_with_fields(fields, Some(field_placeholders));
             }
             ApaFormatType::None => {}
         };
 
-        ApaFormat { format, data }
+        ApaFormat { format, data, placeholders }
     }
 }
 // Fit everything into the format.
@@ -90,69 +89,54 @@ impl fmt::Display for ApaFormat {
             }
             // Defines how each apa format is structured and 
             ApaFormatType::Website => {
-                // Get all of the fields.
-                let authors = self.data.get(&0).unwrap();
-                let date = self.data.get(&1).unwrap();
-                let title = self.data.get(&2).unwrap();
-                let publisher = self.data.get(&3).unwrap();
-                let URL = self.data.get(&4).unwrap();
+                // Here's the format.
+                let reference = "authors. (date). <i>title</i>. website. URL".to_string();
 
-                write!(
-                    f,
-                    "{}. ({}). <i>{}</i>. {}. {}",
-                    if &authors.1 != "" { &authors.1 } else {"Author's Last Name, Initial(s)"},
-                    // If date is not found, add n.d
-                    if &date.1 != "" { &date.1 } else { "n.d." },
-                    if &title.1 != "" { &title.1 } else { "Title of work"},
-                    if &publisher.1 != "" { &publisher.1 } else { "Website" },
-                    URL.1,
-                )
-            }
+                // We replace the field's names in the string of the data.
+                // We then add the placeholders if it wasn't modified.
+                let reference = replace_string_contents(reference, &self.data, &self.placeholders);
+
+                write!(f, "{}", reference)
+            },
             ApaFormatType::Newspaper => {
-                // Get all of the fields.
-                let authors = self.data.get(&0).unwrap();
-                let date = self.data.get(&1).unwrap();
-                let title = self.data.get(&2).unwrap();
-                let newspaper = self.data.get(&3).unwrap();
-                let URL = self.data.get(&4).unwrap();
+                // Here's the format.
+                let reference = "authors. (date). <i>title</i>. newspaper. URL".to_string();
+                // We replace the field's names in the string of the data.
+                // We then add the placeholders if it wasn't modified.
+                let reference = replace_string_contents(reference, &self.data, &self.placeholders);
 
-                write!(
-                    f,
-                    "{}. ({}). {}. <i>{}</i>. {}",
-                    // If text is not present, fill with tooltip.
-                    if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
-                    if &date.1 != "" { &date.1 } else { "n.d." },
-                    if &title.1 != "" { &title.1 } else { "Title of article" },
-
-                    if &newspaper.1 != "" { &newspaper.1 } else { "Newspaper" },
-
-                    URL.1
-                )
+                write!(f, "{}", reference)
             }
             ApaFormatType::Dictionary => {
-                // Get all of the fields.
-                let authors = self.data.get(&0).unwrap();
-                let date = self.data.get(&1).unwrap();
-                let word = self.data.get(&2).unwrap();
-                let editors = self.data.get(&3).unwrap();
-                let dictionary = self.data.get(&4).unwrap();
-                let publisher = self.data.get(&5).unwrap();
-                let URL = self.data.get(&6).unwrap();
+                // Here's the format.
+                let reference = "authors. (date). word. In editors (Ed.). <i>dictionary</i>. publisher. URL".to_string();
+                // We replace the field's names in the string of the data.
+                // We then add the placeholders if it wasn't modified.
+                let reference = replace_string_contents(reference, &self.data, &self.placeholders);
 
-                write!(f,
-                    "{}. ({}). {}. In {} (Ed.). <i>{}</i>. {}. {}",
-                    // If text is not present, fill with tooltip.
-                    if &authors.1 != "" {&authors.1} else { "Author's Last Name, Initial(s)" },
-                    if &date.1 != "" {&date.1} else { "n.d." },
-                    if &word.1 != "" {&word.1} else { "Word" },
-                    if &editors.1 != "" {&editors.1} else { "Initial(s). Last Name" },
-                    if &dictionary.1 != "" {&dictionary.1} else { "Dictionary" },
-                    if &publisher.1 != "" {&publisher.1} else { "Publisher" },
-                    URL.1
-                )
+                write!(f, "{}", reference)
             }
         }
     }
+}
+
+// Replace the contents of a string using a Hashmap.
+pub fn replace_string_contents(string: String, data: &HashMap<usize, (String, String)>, placeholders: &HashMap<usize, (String, String)>) -> String {
+    let mut output = string;
+
+    for (i, field) in data {
+        // Check that the field is valid.
+        if field.1 != "" {
+            // Find and replace the field names to the field contents.
+            output = output.replace(&field.0, &field.1);
+        } else {
+            // Insert placeholder if field data is empty.
+            output = output.replace(&placeholders[i].0, &placeholders[i].1);
+        }
+    }
+
+    return output;
+
 }
 
 // Base logic of the program
@@ -203,4 +187,30 @@ pub fn save_to_x11_clipboard(clipboard: &Clipboard, format_apa: &ApaFormat) {
     ).unwrap();
 
     //thread::sleep(Duration::from_millis(10000));
+}
+
+pub trait ApaFiller {
+    /// Fills the HashMap with fields and values.
+    fn fill_with_fields(&mut self, fields: &[&str], content: Option<&[&str]>);
+}
+
+impl ApaFiller for HashMap<usize, (String, String)> {
+    fn fill_with_fields(&mut self, fields: &[&str], content: Option<&[&str]>) {
+        
+        // Check if there should be any content
+        match content {
+            Some(content) => {
+                // Fill the hashmap with custom content.
+                for (i, data) in fields.iter().zip(content).enumerate() {
+                    self.insert(i, (data.0.to_string(), data.1.to_string()));
+                }
+            }
+            None => {
+                // Fill the fields with nothing in their content.
+                for (i, field) in fields.iter().enumerate() {
+                    self.insert(i, (field.to_string(), "".to_string()));
+                }
+            }
+        }
+    }
 }
