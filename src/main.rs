@@ -56,7 +56,7 @@ fn main() {
                 }
         } else { /* SUCCESSFULLY LEAVE THE PROGRAM */
             // Leave on any key when in the Result Screen.
-            println!("\nLEAVING");
+            //println!("\nLEAVING");
             // Leave raw mode and quit
             stdout.suspend_raw_mode().unwrap();
 
@@ -64,7 +64,7 @@ fn main() {
             writeln!(stdout, "{}", termion::cursor::Show).unwrap();
             stdout.flush().unwrap();
 
-            process::exit(1);
+            process::exit(0);
         }
         
     /* APA editing mode */

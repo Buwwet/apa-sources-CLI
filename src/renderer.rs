@@ -12,7 +12,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
     let mut cursor_pos = stdout.cursor_pos().unwrap();
 
     // Check if there's enough space for the program below.
-    const PRINT_SIZE: u16 = 14;
+    const PRINT_SIZE: u16 = 8;
     if cursor_pos.1 + PRINT_SIZE >= terminal_size().unwrap().1 {
         // There is not enough space, so we scroll up.
         write!(stdout, "{}", termion::scroll::Up(PRINT_SIZE)).unwrap();
@@ -20,14 +20,15 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
     }
 
     // Select format
-    if logic.state == LogicState::SelectingFormat {
-        let format_list = ApaFormatType::list();
+    match logic.state { 
+        LogicState::SelectingFormat => {
+            let format_list = ApaFormatType::list();
 
         
         // Write the top header.
-        write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | (Enter) choose{}{}",
+        write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right {}{}",
             termion::cursor::Goto(1, root_pos.1),
-            termion::clear::CurrentLine,
+            termion::clear::AfterCursor,
             termion::color::Fg(termion::color::AnsiValue(7)),
             termion::style::Bold,
             termion::style::Invert,
@@ -52,13 +53,12 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
             ).unwrap();
         }
 
-    }
-
+    },
     // Add each field in the apa data, calculate which is the longest one
-    if logic.state == LogicState::EditState {
+    LogicState::EditState => {
 
         // Write top header.
-        write!(stdout, "{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit{}{}{}",
+        write!(stdout, "{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit |  (Tab) edit | (Enter) down | (down arrow) down. {}{}{}",
             termion::cursor::Goto(1, root_pos.1),
             termion::color::Fg(termion::color::AnsiValue(7)),
             termion::style::Bold,
@@ -75,16 +75,18 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
             termion::style::Reset,
         ).unwrap(); 
 
-        let mut longest_field: usize = 0;
+        let mut longest_field_name: usize = 0;
+        // Draw each field fields
         for (i, apa_data) in logic.apa.data.iter() {
             // Draw field names
-            write!(stdout, "{}{}{}{}{}{}{}",
+            write!(stdout, "{}{}{}{}",
                 Goto(3, 2 + *i as u16 + root_pos.1),
 
                 // Add color if selected
-                if logic.selected == *i && logic.edit_state { format!("{}", Fg(color::Yellow) ) } else { "".to_string() },
-                if logic.selected == *i && logic.edit_state { format!("{}", style::Invert) } else { "".to_string() },
-                if logic.selected == *i && logic.edit_state { format!("{}", style::Blink) } else { "".to_string() },
+
+                //if logic.selected == *i && logic.edit_state { format!("{}", Fg(color::Yellow) ) } else { "".to_string() },
+                //if logic.selected == *i && logic.edit_state { format!("{}", style::Invert) } else { "".to_string() },
+                //if logic.selected == *i && logic.edit_state { format!("{}", style::Blink) } else { "".to_string() },
 
                 apa_data.0,
                 style::Reset,
@@ -99,16 +101,17 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
             ).unwrap();
 
             // If this field is bigger than longest field, update it
-            if apa_data.0.len() > longest_field {
-                longest_field = apa_data.0.len();
+            if apa_data.0.len() > longest_field_name {
+                longest_field_name = apa_data.0.len();
             }
         }
 
         // Draw the field's contents.
+        let mut longest_field: usize = 0;
         for (i, apa_data) in logic.apa.data.iter() {
             
             write!(stdout, "{} │{}{} {}{}",
-                Goto(3 + longest_field as u16, 2 + *i as u16 + root_pos.1),
+                Goto(3 + longest_field_name as u16, 2 + *i as u16 + root_pos.1),
 
                 // Lightup the beam of the selected field                
                 Fg(color::Reset),
@@ -117,10 +120,15 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
                 termion::clear::UntilNewline,
                 apa_data.1,
             ).unwrap();
+
+            // Update the longest field if this one is longer.
+            if apa_data.1.len() > longest_field {
+                longest_field = apa_data.1.len();
+            }
         }
 
-        // Draw the bar that separates the fields and link.
-        for i in 1..30 {
+        // Draw the bar that separates the fields and the link.
+        for i in 1..longest_field + longest_field_name + 6 {
             // Go to position
             write!(stdout, "{}", 
                 Goto(i as u16, logic.apa.data.len() as u16 + 2 + root_pos.1)
@@ -145,7 +153,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
 
             // write letter
             match i {
-                _ if i == longest_field + 4 => {
+                _ if i == longest_field_name + 4 => {
                     write!(stdout, "┴",
                     ).unwrap();
                 }
@@ -183,14 +191,48 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
             write!(stdout, "{}{}", 
                 termion::cursor::Show,
                 Goto(
-                    6 + logic.cursor_pos as u16 + longest_field as u16,
+                    6 + logic.cursor_pos as u16 + longest_field_name as u16,
                     2 + logic.selected as u16 + root_pos.1
                 )
             ).unwrap()
         } else {
             write!(stdout, "{}", termion::cursor::Hide).unwrap()
         }
+    },
+    LogicState::Result => {
+        // Simple result screen.
+
+        // Update the header.
+        write!(stdout, "{}{}{}{}{}-- Current APA 7 format type: {}{}{} --{} Press (Control + C) to exit.{}{}{}",
+            termion::cursor::Goto(1, root_pos.1),
+            termion::color::Fg(termion::color::AnsiValue(7)),
+            termion::clear::AfterCursor,
+            termion::style::Bold,
+            termion::style::Invert,
+
+            termion::style::Italic,
+            logic.apa.format,
+            termion::style::NoItalic,
+
+            termion::cursor::Goto(1, 1 + root_pos.1),
+
+            termion::color::Bg(termion::color::Reset),
+            termion::color::Fg(termion::color::Reset),
+            termion::style::Reset,
+        ).unwrap(); 
+
+        // Write the apa reference.
+        write!(stdout, "{}{}Finished APA reference:{}    {}{}",
+            Goto(1, 2 + root_pos.1),
+            termion::clear::UntilNewline,
+
+            Goto(1, 3 + root_pos.1),
+            logic.apa,
+            termion::clear::AfterCursor,
+        ).unwrap();
     }
+
+}
 
     // Update the terminal.
     stdout.flush().unwrap();
