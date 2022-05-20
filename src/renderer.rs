@@ -57,7 +57,7 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
     LogicState::EditState => {
 
         // Write top header.
-        write!(stdout, "{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete | (Return) edit |  (Tab) edit | (Enter) down | (down arrow) down. {}{}{}",
+        write!(stdout, "{}{}{}{}-- Current APA 7 format type: {}{}{} --{} (d) full delete |  (Tab) switch state | (Enter) down | (down arrow) down. {}{}{}",
             termion::cursor::Goto(1, root_pos.1),
             termion::color::Fg(termion::color::AnsiValue(7)),
             termion::style::Bold,
