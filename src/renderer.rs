@@ -26,9 +26,8 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
 
         
         // Write the top header.
-        write!(stdout, "{}{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right {}{}",
+        write!(stdout, "{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right {}{}",
             termion::cursor::Goto(1, root_pos.1),
-            termion::clear::AfterCursor,
             termion::color::Fg(termion::color::AnsiValue(7)),
             termion::style::Bold,
             termion::style::Invert,
