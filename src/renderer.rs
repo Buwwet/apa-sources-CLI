@@ -1,6 +1,8 @@
 use std::{io::{stdout, Write, Stdout}, str::Bytes, ops::Range};
 
-use apa::{Logic, ApaFormatType, LogicState};
+use crate::lib::{Logic, ApaFormatType, LogicState};
+
+
 use termion::{self, raw::{IntoRawMode, RawTerminal}, event::Key, input::TermRead, color::Fg, terminal_size, cursor::DetectCursorPos};
 use termion::cursor::Goto;
 use termion::style;
@@ -26,13 +28,15 @@ pub fn render(logic: &Logic, stdout: &mut RawTerminal<Stdout>, root_pos : (u16, 
 
         
         // Write the top header.
-        write!(stdout, "{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right {}{}",
+        write!(stdout, "{}{}{}{}-- APA 7 CLI: choose the format --{} (←) left | (→) right | [LANG: {:?}] {}{}",
             termion::cursor::Goto(1, root_pos.1),
             termion::color::Fg(termion::color::AnsiValue(7)),
             termion::style::Bold,
             termion::style::Invert,
 
             termion::cursor::Goto(1, 1 + root_pos.1),
+
+            logic.apa.lang,
 
             termion::color::Bg(termion::color::Reset),
             termion::style::Reset,

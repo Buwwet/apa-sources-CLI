@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+path = "./src/lib/mod.rs"
+
 [dependencies]
 # Print to the terminal
 termion = "1.5.6"
@@ -12,3 +15,6 @@ termion = "1.5.6"
 unicode-segmentation = "1.9.0"
 # X11 clipboard support.
 x11-clipboard = "0.6.0"
+
+# Date management.
+chrono = "0.4.19"

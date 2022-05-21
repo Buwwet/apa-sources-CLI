@@ -1,8 +1,8 @@
 pub mod lib;
-mod renderer;
+pub mod renderer;
 
 
-use apa::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard, LogicState};
+use lib::{Logic, ApaFormatType, ApaFormat, save_to_x11_clipboard, LogicState, Lang};
 use renderer::render;
 use unicode_segmentation::UnicodeSegmentation;
 use x11_clipboard::Clipboard;
@@ -189,12 +189,21 @@ fn main() {
                 }
                 // Select the format and switch to editing mode
                 Key::Char('\n') => {
-                    logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected]);
+                    logic.apa = ApaFormat::new(ApaFormatType::list()[logic.selected], Some(logic.apa.lang));
                     logic.selected = 0;
                     logic.state = LogicState::EditState;
                     // Clear the screen.
                     write!(stdout, "{}{}", termion::cursor::Goto(1, cursor_pos.1),termion::clear::AfterCursor).unwrap();
                 }
+
+                // Switch language of the default apa format None.
+                Key::Char('\t') => {
+                    match logic.apa.lang {
+                        Lang::English => logic.apa.lang = Lang::Spanish,
+                        Lang::Spanish => logic.apa.lang = Lang::English,
+                    }
+                }
+
                 _ => {}
             }
         }

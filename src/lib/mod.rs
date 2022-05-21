@@ -1,8 +1,11 @@
-use std::{fmt, thread, time::Duration};
+use std::{fmt::{self, format}, thread, time::Duration};
 use std::{collections::HashMap, slice::Iter};
 
+use date::retrive_current_date;
 use termion::style;
 use x11_clipboard::Clipboard;
+
+pub mod date;
 
 #[derive(Clone, Copy)]
 pub enum ApaFormatType {
@@ -45,14 +48,20 @@ pub struct ApaFormat {
     pub format: ApaFormatType,
     pub data: HashMap<usize, (String, String)>,
 
-    //TODO
+    //Placeholders to print when the user hasn't added anything.
     pub placeholders: HashMap<usize, (String, String)>,
+
+    // Language of the APA format (used for date).
+    pub lang: Lang,
 }
 impl ApaFormat {
-    pub fn new(format: ApaFormatType) -> ApaFormat {
+    pub fn new(format: ApaFormatType, lang: Option<Lang>) -> ApaFormat {
         // Creates an empty version of the apa format.
         let mut data: HashMap<usize, (String, String)> = HashMap::new();
         let mut placeholders: HashMap<usize, (String, String)> = HashMap::new();
+
+        // Online citations can benefit from mentioning the date in which
+        // they were consulted.
 
         match format {
             // Each format has a different amount and types of fields.
@@ -76,13 +85,21 @@ impl ApaFormat {
             }
             ApaFormatType::None => {}
         };
+        let lang = match lang {
+            Some(lang) => lang,
+            None => Lang::English
+        };
 
-        ApaFormat { format, data, placeholders }
+        ApaFormat { format, data, placeholders, lang}
     }
 }
 // Fit everything into the format.
 impl fmt::Display for ApaFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
+        // Get current date
+        let date = retrive_current_date(&self.lang);
+
         match self.format {
             ApaFormatType::None => {
                 write!(f, "none")
@@ -90,7 +107,7 @@ impl fmt::Display for ApaFormat {
             // Defines how each apa format is structured and 
             ApaFormatType::Website => {
                 // Here's the format.
-                let reference = "authors. (date). <i>title</i>. website. URL".to_string();
+                let reference = format!("authors. (date). <i>title</i>. website. {} URL", date);
 
                 // We replace the field's names in the string of the data.
                 // We then add the placeholders if it wasn't modified.
@@ -100,7 +117,7 @@ impl fmt::Display for ApaFormat {
             },
             ApaFormatType::Newspaper => {
                 // Here's the format.
-                let reference = "authors. (date). <i>title</i>. newspaper. URL".to_string();
+                let reference = format!("authors. (date). <i>title</i>. newspaper. {} URL", date);
                 // We replace the field's names in the string of the data.
                 // We then add the placeholders if it wasn't modified.
                 let reference = replace_string_contents(reference, &self.data, &self.placeholders);
@@ -109,7 +126,7 @@ impl fmt::Display for ApaFormat {
             }
             ApaFormatType::Dictionary => {
                 // Here's the format.
-                let reference = "authors. (date). word. In editors (Ed.). <i>dictionary</i>. publisher. URL".to_string();
+                let reference = format!("authors. (date). word. In editors (Ed.). <i>dictionary</i>. publisher. {} URL", date);
                 // We replace the field's names in the string of the data.
                 // We then add the placeholders if it wasn't modified.
                 let reference = replace_string_contents(reference, &self.data, &self.placeholders);
@@ -161,6 +178,12 @@ pub enum LogicState {
     Result
 }
 
+#[derive(Debug)]
+pub enum Lang {
+    English,
+    Spanish,
+}
+
 impl Logic {
     pub fn new() -> Logic {
         Logic {
@@ -168,7 +191,7 @@ impl Logic {
             edit_state: true,
             selected: 0,
             cursor_pos: 0,
-            apa: ApaFormat::new(ApaFormatType::None),
+            apa: ApaFormat::new(ApaFormatType::None, None),
         }
     }
 }
